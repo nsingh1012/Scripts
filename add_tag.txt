@@ -1,0 +1,26 @@
+$subscriptionId = "your-sub-id"
+$rgName = "your-rg-name"
+
+# Set the subscription context
+Set-AzContext -SubscriptionId $subscriptionId
+
+# Get all resources in the specified resource group
+$resources = Get-AzResource -ResourceGroupName $rgName
+
+foreach ($resource in $resources) {
+    $resourceType = $resource.Type
+    $resourceName = $resource.Name
+
+    # Initialize tags if null
+    if (-not $resource.Tags) {
+        $resource.Tags = @{}
+    }
+
+    # Add or update tags
+    $resource.Tags["tag_name"] = "yes"
+    $resource.Tags["tag_name_type"] = "value"
+    Write-Host "Updating tags for ${resourceType}: ${resourceName}"
+
+    # Update the resource
+    Set-AzResource -ResourceId $resource.ResourceId -Tag $resource.Tags -Force | Out-Null
+}
