@@ -1,0 +1,27 @@
+#!/bin/bash
+ 
+# Path to the file containing IPs (one per line)
+IP_LIST="vm_ips.txt"
+ 
+# Path to the password file (single line with password)
+PASSWORD_FILE="password.txt"
+ 
+# Path to the script you want to copy
+SCRIPT_TO_COPY="your_script.sh"
+ 
+# Remote path where the script should be copied
+REMOTE_PATH="/home/your_local_user/"
+ 
+# Read password
+PASSWORD=$(<"$PASSWORD_FILE")
+ 
+# Loop through each IP and copy the script
+while IFS= read -r IP; do
+    echo "Copying script to $IP..."
+    sshpass -p "$PASSWORD" scp "$SCRIPT_TO_COPY" your_local_user@"$IP":"$REMOTE_PATH"
+    if [ $? -eq 0 ]; then
+        echo "Successfully copied to $IP"
+    else
+        echo "Failed to copy to $IP"
+    fi
+done < "$IP_LIST"
