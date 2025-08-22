@@ -1,0 +1,21 @@
+let timeRangeEnd = startofmonth(now()) - 1s;
+let timeRangeStart = startofmonth(timeRangeEnd);
+let WinHB =
+Heartbeat
+| where TimeGenerated > timeRangeStart and TimeGenerated < timeRangeEnd
+| where OSType == "Windows"
+| summarize HbTime = max(TimeGenerated) by Computer, OSType, OSMajorVersion;
+InsightsMetrics
+| where TimeGenerated > timeRangeStart and TimeGenerated < timeRangeEnd
+| where Namespace == "LogicalDisk" and Name == "FreeSpaceMB"
+| extend Disk = tostring(todynamic(Tags)["vm.azm.ms/mountId"])
+| extend DiskSizeMB = todouble(todynamic(Tags)["vm.azm.ms/diskSizeMB"])
+| where Disk =~ "C:"
+| summarize arg_max(TimeGenerated, *) by Computer, Disk
+| extend Disk_Size_GB = round(DiskSizeMB / 1024.0, 2)
+| extend Disk_Free_Space_GB = round(Val / 1024.0, 2)
+| extend Disk_Free_Percentage = round(100.0 * Val / DiskSizeMB, 2)
+| join kind=leftouter (WinHB) on Computer
+| project TimeGenerated, Computer, Disk, Disk_Size_GB, Disk_Free_Space_GB,
+Disk_Free_Percentage, OSType, OSMajorVersion
+| order by Disk_Free_Percentage asc
