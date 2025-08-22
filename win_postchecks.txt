@@ -1,0 +1,24 @@
+# Server list file path
+$serverList = "C:\Users\narsi\Downloads\servers_list.txt"
+$cred = Get-Credential
+$results = @()
+foreach ($server in Get-Content $serverList) {
+    try {
+        $hotfixes = Get-HotFix -ComputerName $server -Credential $cred | Select-Object -Last 4 HotFixID, Description, InstalledOn
+		
+        foreach ($hf in $hotfixes) {
+            $results += "Server: $server | HotFixID: $($hf.HotFixID) | Description: $($hf.Description) | InstalledOn: $($hf.InstalledOn)"
+        }
+    }
+    catch {
+        $results += "Server: $server | HotFixID: ERROR | Description: Could not fetch | InstalledOn: "
+    }
+
+    Write-Host "$server postcheck completed"
+}
+
+# Output file path
+$outputFile = "C:\Users\narsi\Downloads\HotfixReport.txt"
+$results | Out-File -FilePath $outputFile -Encoding UTF8
+Write-Host "Report generated: $outputFile"
+
