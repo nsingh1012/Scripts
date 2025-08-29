@@ -1,0 +1,8 @@
+Event
+| where EventID == 19
+| where Source == "Microsoft-Windows-WindowsUpdateClient"
+| extend KBID = extract(@"KB\d+", 0, tostring(RenderedDescription))
+| project TimeGenerated, Computer, KBID, RenderedDescription
+| summarize Updates = make_list(pack_array(Computer)) by KBID
+
+ 
